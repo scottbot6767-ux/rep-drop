@@ -501,6 +501,8 @@ let jackpotHue = 0;
 let time = 0;
 
 function draw() {
+  animId = requestAnimationFrame(draw); // schedule next frame first — can never be blocked
+  try {
   time++;
   jackpotHue = (jackpotHue + 0.7) % 360;
 
@@ -571,22 +573,25 @@ function draw() {
     ctx.shadowBlur = 0;
   }
 
-  // Particles
-  particles = particles.filter(p => p.life > 0);
+  // Particles — update first, then draw only live ones
   particles.forEach(p => {
     p.x  += p.vx; p.y += p.vy;
     p.vy += p.gravity;
     p.vx *= 0.97;
     p.life -= p.decay;
+  });
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
     const [r,g,b] = p.color;
+    const radius = Math.max(0.5, p.size * p.life); // never negative
     if (p.glow) { ctx.shadowBlur = 8; ctx.shadowColor = `rgb(${r},${g},${b})`; }
-    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.globalAlpha = p.life;
     if (p.shape === 'square') {
       ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+      ctx.fillRect(p.x - radius/2, p.y - radius/2, radius, radius);
     } else {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, radius, 0, Math.PI*2);
       ctx.fillStyle = `rgb(${r},${g},${b})`;
       ctx.fill();
     }
@@ -600,9 +605,9 @@ function draw() {
   drawLaneIndicator();
 
   // Update physics
-  if (dropping && ball && !ball.landed) { try { updateBall(); } catch(e) { console.error("physics err:", e); } }
+  if (dropping && ball && !ball.landed) { try { updateBall(); } catch(e) { console.error('physics:', e); } }
 
-  animId = requestAnimationFrame(draw);
+  } catch(e) { console.error('draw:', e); ctx.restore(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; }
 }
 
 function drawPegs() {
