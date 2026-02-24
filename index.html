@@ -292,7 +292,13 @@ const SLOT_COLS  = [
 /* ════════════════════════════════════════════
    STATE
    ════════════════════════════════════════════ */
-let reps       = [];
+const DEMO_REPS = [
+  {id:'demo-1',name:'Andrew R.',tokens:5,total_won:0},
+  {id:'demo-2',name:'Bryan F.',tokens:3,total_won:0},
+  {id:'demo-3',name:'Ryan D.',tokens:8,total_won:0},
+  {id:'demo-4',name:'Tyler D.',tokens:2,total_won:0},
+];
+let reps       = [...DEMO_REPS];
 let drops      = [];
 let selRep     = null;
 let selLane    = 4;  // default center
@@ -843,7 +849,7 @@ function hideAnnounce() {
     msgEl.style.color='var(--dim)'; msgEl.textContent='Saving…';
 
     try {
-      const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase());
+      const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase() && !String(r.id).startsWith('demo-'));
       if (existing) {
         await sb.from('rd_reps').update({ tokens: toks }).eq('id', existing.id);
         msgEl.style.color='var(--lime)'; msgEl.textContent=`${name} updated → ${toks} tokens`;
@@ -895,8 +901,8 @@ async function loadData() {
       sb.from('rd_reps').select('*').order('name'),
       sb.from('rd_drops').select('*').order('created_at', {ascending:false}).limit(30),
     ]);
-    if (repsRes.data)  reps  = repsRes.data;
-    if (dropsRes.data) drops = dropsRes.data;
+    if (repsRes.data  && repsRes.data.length  > 0) reps  = repsRes.data;
+    if (dropsRes.data && dropsRes.data.length > 0) drops = dropsRes.data;
 
     // Update selRep reference
     if (selRep) selRep = reps.find(r => r.id === selRep.id) || null;
@@ -907,16 +913,8 @@ async function loadData() {
     if (selRep) selectRep(selRep);
   } catch(e) {
     console.warn('DB error:', e);
-    // Use demo data if DB not set up yet
-    if (!reps.length) {
-      reps = [
-        {id:'1',name:'Andrew R.',tokens:5,total_won:0},
-        {id:'2',name:'Bryan F.',tokens:3,total_won:0},
-        {id:'3',name:'Ryan D.',tokens:8,total_won:0},
-        {id:'4',name:'Tyler D.',tokens:2,total_won:0},
-      ];
-      renderRepList();
-    }
+    // reps already pre-loaded with demo data — just re-render
+    renderRepList();
   }
 }
 
