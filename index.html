@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rep Drop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--surface:#0d0d20;--border:#1e1e3a;
+  --lime:#c8ff00;--cyan:#00d4ff;--magenta:#ff2d78;
+  --gold:#ffd700;--navy:#14364d;
+  --text:#e8e8f0;--dim:#6a6a8a;
+  --font-head:'Bebas Neue',sans-serif;
+  --font-sub:'Barlow Condensed',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden}
+
+/* ─── PASSWORD GATE ─── */
+#gate{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+.gate-logo{font-family:var(--font-head);font-size:clamp(3rem,8vw,6rem);letter-spacing:.08em;color:var(--lime);line-height:1;text-shadow:0 0 60px rgba(200,255,0,.4)}
+.gate-sub{font-family:var(--font-sub);font-size:1rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+.gate-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:4px;padding:.75rem 1.25rem;font-family:var(--font-body);font-size:1rem;color:var(--text);text-align:center;width:260px;outline:none;transition:border-color .2s}
+.gate-input:focus{border-color:var(--lime)}
+.gate-btn{background:var(--lime);border:none;border-radius:4px;padding:.75rem 2.5rem;font-family:var(--font-head);font-size:1.4rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:opacity .2s}
+.gate-btn:hover{opacity:.85}
+.gate-err{color:var(--magenta);font-size:.8rem;font-family:var(--font-sub);letter-spacing:.1em;min-height:1rem}
+
+/* ─── MAIN LAYOUT ─── */
+#app{display:none;height:100vh;display:none;grid-template-columns:220px 1fr 220px;grid-template-rows:1fr;gap:0;padding:12px;gap:12px}
+#app.visible{display:grid}
+
+/* ─── PANELS ─── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:.75rem;overflow:hidden}
+.panel-title{font-family:var(--font-head);font-size:1.4rem;letter-spacing:.15em;color:var(--lime);border-bottom:1px solid var(--border);padding-bottom:.5rem}
+
+/* Rep list */
+.rep-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .6rem;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font-sub);font-size:.9rem;font-weight:600;letter-spacing:.05em}
+.rep-item:hover{background:rgba(200,255,0,.07);border-color:rgba(200,255,0,.2)}
+.rep-item.active{background:rgba(200,255,0,.12);border-color:var(--lime);color:var(--lime)}
+.rep-tokens{font-size:.75rem;font-weight:700;background:rgba(255,215,0,.15);color:var(--gold);padding:.15rem .4rem;border-radius:3px;font-family:var(--font-head);letter-spacing:.05em}
+
+/* Drop button */
+.drop-btn{width:100%;background:var(--lime);border:none;border-radius:5px;padding:.8rem;font-family:var(--font-head);font-size:1.8rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:all .2s;margin-top:auto}
+.drop-btn:hover{box-shadow:0 0 30px rgba(200,255,0,.5)}
+.drop-btn:disabled{opacity:.35;pointer-events:none}
+.drop-btn.cooldown{background:var(--dim);color:#000}
+
+/* Token info */
+.token-display{text-align:center;padding:.5rem;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.15);border-radius:4px}
+.token-display .big{font-family:var(--font-head);font-size:2rem;color:var(--gold);line-height:1}
+.token-display .lbl{font-size:.65rem;font-family:var(--font-sub);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+
+/* History */
+.hist-item{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-sub);font-size:.82rem;padding:.3rem .4rem;border-radius:3px;border-bottom:1px solid rgba(255,255,255,.04)}
+.hist-name{color:var(--dim);font-size:.75rem;letter-spacing:.05em}
+.hist-amount{font-weight:700;font-family:var(--font-head);font-size:1rem;letter-spacing:.05em}
+.hist-amount.jackpot{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.6)}
+.hist-amount.high{color:var(--lime)}
+.hist-amount.mid{color:var(--cyan)}
+.hist-amount.low{color:var(--dim)}
+
+/* Leaderboard */
+.lb-item{display:flex;align-items:center;gap:.5rem;padding:.3rem .4rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.lb-rank{font-family:var(--font-head);font-size:.9rem;color:var(--dim);width:20px}
+.lb-name{flex:1;font-family:var(--font-sub);font-size:.82rem;font-weight:600;letter-spacing:.05em}
+.lb-won{font-family:var(--font-head);font-size:1rem;color:var(--gold)}
+
+/* ─── CANVAS AREA ─── */
+#board-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#title-bar{font-family:var(--font-head);font-size:2.8rem;letter-spacing:.25em;color:var(--lime);text-shadow:0 0 40px rgba(200,255,0,.35);text-align:center;line-height:1}
+#canvas-container{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+canvas{display:block;border-radius:8px;border:1px solid var(--border)}
+
+/* ─── ADMIN ─── */
+.admin-bar{display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:4px}
+.admin-bar input{flex:1;background:none;border:none;font-family:var(--font-body);font-size:.8rem;color:var(--text);outline:none}
+.admin-bar button{background:var(--magenta);border:none;border-radius:3px;padding:.25rem .6rem;font-family:var(--font-head);font-size:.75rem;letter-spacing:.1em;color:#fff;cursor:pointer;white-space:nowrap}
+
+/* Announce overlay */
+#announce{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
+.announce-box{background:rgba(6,6,14,.9);border:2px solid var(--lime);border-radius:8px;padding:1.5rem 3rem;text-align:center;transform:scale(0);transition:transform .25s cubic-bezier(.17,.67,.49,1.5);backdrop-filter:blur(8px)}
+.announce-box.show{transform:scale(1)}
+.announce-prize{font-family:var(--font-head);font-size:4rem;letter-spacing:.1em;line-height:1}
+.announce-sub{font-family:var(--font-sub);font-size:.9rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:.25rem}
+
+/* ─── SCROLLBARS ─── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.scrollable{overflow-y:auto;flex:1}
+
+/* ─── LANE SELECT BUTTONS ─── */
+.lane-btns{display:flex;gap:4px;justify-content:center;width:100%}
+.lane-btn{flex:1;background:rgba(200,255,0,.06);border:1px solid rgba(200,255,0,.15);border-radius:3px;padding:.3rem 0;font-family:var(--font-head);font-size:.9rem;color:rgba(200,255,0,.5);cursor:pointer;transition:all .15s;letter-spacing:.05em}
+.lane-btn:hover,.lane-btn.sel{background:rgba(200,255,0,.18);border-color:var(--lime);color:var(--lime)}
+
+/* ─── SETUP MODAL ─── */
+#setup-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,14,.92);align-items:center;justify-content:center}
+#setup-modal.open{display:flex}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;width:min(520px,92vw);max-height:80vh;overflow-y:auto}
+.setup-box pre{background:#000;border-radius:4px;padding:1rem;font-size:.75rem;color:#88ff88;white-space:pre-wrap;margin:.75rem 0}
+.setup-box h2{font-family:var(--font-head);font-size:1.6rem;letter-spacing:.1em;margin-bottom:.5rem;color:var(--lime)}
+.setup-box p{font-size:.82rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem}
+.setup-close{background:none;border:1px solid var(--border);border-radius:4px;padding:.4rem 1rem;font-family:var(--font-sub);font-size:.8rem;color:var(--dim);cursor:pointer;margin-top:1rem}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate">
+  <div class="gate-logo">REP DROP</div>
+  <div class="gate-sub">Internal Game — Rankings.io</div>
+  <input class="gate-input" id="gate-input" type="password" placeholder="enter password" onkeydown="if(event.key==='Enter')checkGate()">
+  <button class="gate-btn" onclick="checkGate()">ENTER</button>
+  <div class="gate-err" id="gate-err"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- LEFT PANEL -->
+  <div class="panel">
+    <div class="panel-title">REPS</div>
+    <div class="token-display" id="token-display">
+      <div class="lbl">Select a Rep</div>
+      <div class="big">—</div>
+      <div class="lbl">tokens remaining</div>
+    </div>
+    <div class="scrollable" id="rep-list"></div>
+    <!-- Admin: give tokens -->
+    <div class="admin-bar" id="admin-bar" style="display:none">
+      <input id="admin-rep-input" type="text" placeholder="Rep name…">
+      <input id="admin-tok-input" type="number" min="0" placeholder="Tokens" style="width:60px">
+      <button onclick="adminSetTokens()">SET</button>
+    </div>
+    <div style="display:flex;gap:.4rem">
+      <button class="drop-btn" id="drop-btn" disabled onclick="triggerDrop()">DROP!</button>
+    </div>
+    <button onclick="showSetup()" style="background:none;border:none;color:var(--dim);font-size:.65rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center">DB Setup</button>
+  </div>
+
+  <!-- BOARD -->
+  <div id="board-wrap" class="panel">
+    <div id="title-bar">🎯 REP DROP</div>
+    <div id="canvas-container">
+      <canvas id="c"></canvas>
+      <div id="announce"><div class="announce-box" id="announce-box">
+        <div class="announce-prize" id="announce-prize"></div>
+        <div class="announce-sub" id="announce-sub"></div>
+      </div></div>
+    </div>
+    <div class="lane-btns" id="lane-btns"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <div class="panel-title">RECENT DROPS</div>
+    <div class="scrollable" id="hist-list"></div>
+    <div class="panel-title" style="margin-top:.5rem">LEADERBOARD</div>
+    <div class="scrollable" id="lb-list"></div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div id="setup-modal">
+  <div class="setup-box">
+    <h2>Database Setup</h2>
+    <p>Run this SQL in your <strong>Supabase SQL Editor</strong> to create the Rep Drop tables:</p>
+    <pre id="setup-sql"></pre>
+    <button class="setup-close" onclick="document.getElementById('setup-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   SUPABASE CONFIG
+   ════════════════════════════════════════════ */
+const SB_URL  = 'https://eadtaehsjzelskyjybwz.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhZHRhZWhzanplbHNreWp5Ynd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTg5NTYsImV4cCI6MjA4NzQzNDk1Nn0.FB9pwYBTyFpUWTptYO2z6nhayM2Cif9DAbXEXmpRSCk';
+const sb      = supabase.createClient(SB_URL, SB_KEY);
+
+const SETUP_SQL = `
+-- Rep Drop tables
+CREATE TABLE IF NOT EXISTS rd_reps (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  tokens INTEGER DEFAULT 0,
+  total_won INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS rd_drops (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  rep_name TEXT,
+  prize_amount INTEGER DEFAULT 0,
+  slot_index INTEGER,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE rd_reps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rd_drops ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all_reps"  ON rd_reps  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all_drops" ON rd_drops FOR ALL USING (true) WITH CHECK (true);
+`.trim();
+
+/* ════════════════════════════════════════════
+   GAME CONFIG
+   ════════════════════════════════════════════ */
+const PASS       = 'drop';
+const ADMIN_PASS = 'admin1234';
+let isAdmin      = false;
+
+// Board geometry
+const COLS   = 9;      // prize slots
+const ROWS   = 12;     // peg rows
+const CW     = 660;    // canvas width
+const CH     = 700;    // canvas height
+const SLOT_W = CW / COLS;   // 73.3px
+const ROW_H  = 52;           // vertical spacing
+const TOP_Y  = 70;           // first peg row y
+const PEG_R  = 7;
+const BALL_R = 12;
+const PRIZE_Y_START = TOP_Y + ROWS * ROW_H; // bottom of peg zone
+
+// Peg positions
+// Even rows: 9 pegs at slot centers
+// Odd rows: 8 pegs at slot midpoints
+const PEGS = [];
+for (let r = 0; r < ROWS; r++) {
+  const y = TOP_Y + r * ROW_H;
+  if (r % 2 === 0) {
+    for (let c = 0; c < COLS; c++)
+      PEGS.push({ x: SLOT_W / 2 + c * SLOT_W, y });
+  } else {
+    for (let c = 0; c < COLS - 1; c++)
+      PEGS.push({ x: SLOT_W + c * SLOT_W, y });
+  }
+}
+
+const PRIZES     = [0, 100, 500, 1000, 10000, 1000, 500, 100, 0];
+const SLOT_COLS  = [
+  {bg:'#0d0d1c',border:'#1e1e32',label:'#2a2a4a'},
+  {bg:'#060f1e',border:'#0e3060',label:'#1a6aa0'},
+  {bg:'#0c0820',border:'#2a126a',label:'#6a30c8'},
+  {bg:'#061406',border:'#0e4a12',label:'#20a830'},
+  {bg:'#1a0e00',border:'#c06000',label:'#ffd700'},
+  {bg:'#061406',border:'#0e4a12',label:'#20a830'},
+  {bg:'#0c0820',border:'#2a126a',label:'#6a30c8'},
+  {bg:'#060f1e',border:'#0e3060',label:'#1a6aa0'},
+  {bg:'#0d0d1c',border:'#1e1e32',label:'#2a2a4a'},
+];
+
+/* ════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════ */
+let reps       = [];
+let drops      = [];
+let selRep     = null;
+let selLane    = 4;  // default center
+let dropping   = false;
+let ball       = null;
+let particles  = [];
+let trail      = [];
+let bgParticles= [];
+let pegFlashes = {}; // peg index → {life, ring}
+let shakeX = 0, shakeY = 0, shakeMag = 0;
+let announcing = false;
+let animId;
+
+/* ════════════════════════════════════════════
+   CANVAS SETUP
+   ════════════════════════════════════════════ */
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+canvas.width  = CW;
+canvas.height = CH;
+
+// Click on canvas to choose lane
+canvas.addEventListener('click', e => {
+  if (dropping || !selRep) return;
+  const rect = canvas.getBoundingClientRect();
+  const x    = e.clientX - rect.left;
+  const y    = e.clientY - rect.top;
+  if (y < TOP_Y - 20) {
+    const lane = Math.min(COLS - 1, Math.max(0, Math.floor(x / SLOT_W)));
+    selLane = lane;
+    updateLaneBtns();
+  }
+});
+
+/* ════════════════════════════════════════════
+   BACKGROUND PARTICLES
+   ════════════════════════════════════════════ */
+for (let i = 0; i < 160; i++) {
+  bgParticles.push({
+    x: Math.random() * CW,
+    y: Math.random() * CH,
+    r: Math.random() * 1.5 + 0.3,
+    vx: (Math.random() - .5) * 0.2,
+    vy: (Math.random() - .5) * 0.2,
+    a: Math.random() * 0.4 + 0.05,
+    hue: Math.random() < 0.5 ? 180 : (Math.random() < 0.5 ? 75 : 330),
+  });
+}
+
+/* ════════════════════════════════════════════
+   PARTICLE SYSTEM
+   ════════════════════════════════════════════ */
+function spawnParticles(x, y, count, colorFn, opts = {}) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = (opts.speed || 4) * (0.4 + Math.random() * 0.8);
+    const [r,g,b] = colorFn(i, count);
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - (opts.upBias || 0),
+      life: 1,
+      decay: (opts.decay || 0.022) * (0.8 + Math.random() * 0.4),
+      r: g, g: b, b: r,        // stored as [r,g,b]
+      color: [r, g, b],
+      size: (opts.size || 4) * (0.5 + Math.random() * 0.8),
+      gravity: opts.gravity != null ? opts.gravity : 0.15,
+      glow: opts.glow || false,
+      shape: opts.shape || 'circle',
+    });
+  }
+}
+
+function pegHitParticles(x, y) {
+  spawnParticles(x, y, 10,
+    () => {
+      const t = Math.random();
+      return t < .33 ? [200,255,0] : (t < .66 ? [0,212,255] : [255,255,255]);
+    },
+    { speed: 3.5, decay: 0.04, size: 3, gravity: 0.1 }
+  );
+}
+
+function landingParticles(x, y, prize) {
+  const count = prize >= 10000 ? 120 : prize >= 1000 ? 70 : prize >= 500 ? 40 : 20;
+  const isJack = prize >= 10000;
+  spawnParticles(x, y - 20, count,
+    (i, n) => {
+      if (isJack) {
+        const angle = (i / n) * 360;
+        const [rr,gg,bb] = hslToRgb(angle / 360, 1, 0.6);
+        return [rr,gg,bb];
+      }
+      const t = Math.random();
+      return t < .4 ? [255,215,0] : (t < .7 ? [200,255,0] : [0,212,255]);
+    },
+    { speed: prize >= 1000 ? 7 : 5, decay: 0.015, size: 5, gravity: 0.2, upBias: 3, glow: true }
+  );
+  // coin spray
+  if (prize >= 500) {
+    spawnParticles(x, y - 10, 30, () => [255,215,0],
+      { speed: 6, decay: 0.018, size: 3, gravity: 0.3, upBias: 4, shape:'square' });
+  }
+}
+
+function hslToRgb(h, s, l) {
+  let r,g,b;
+  if (!s) { r=g=b=l; }
+  else {
+    const q = l < .5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+    const hue2rgb = (p,q,t) => { if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p; };
+    r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+  }
+  return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+}
+
+/* ════════════════════════════════════════════
+   PHYSICS
+   ════════════════════════════════════════════ */
+function startDrop(lane) {
+  const x = SLOT_W / 2 + lane * SLOT_W;
+  ball = {
+    x, y: 10,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: 0,
+    landed: false,
+    slotIdx: -1,
+  };
+  trail = [];
+  dropping = true;
+}
+
+function updateBall() {
+  if (!ball || ball.landed) return;
+
+  // Gravity
+  ball.vy += 0.28;
+  // Air resistance
+  ball.vx *= 0.999;
+
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  // Trail
+  trail.push({ x: ball.x, y: ball.y });
+  if (trail.length > 28) trail.shift();
+
+  // Wall collisions
+  if (ball.x - BALL_R < 0) { ball.x = BALL_R; ball.vx = Math.abs(ball.vx) * 0.6; }
+  if (ball.x + BALL_R > CW) { ball.x = CW - BALL_R; ball.vx = -Math.abs(ball.vx) * 0.6; }
+
+  // Peg collisions
+  for (let i = 0; i < PEGS.length; i++) {
+    const p = PEGS[i];
+    const dx = ball.x - p.x, dy = ball.y - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const minDist = BALL_R + PEG_R;
+    if (dist < minDist && dist > 0.1) {
+      // Reflect
+      const nx = dx / dist, ny = dy / dist;
+      const dot = ball.vx * nx + ball.vy * ny;
+      ball.vx = (ball.vx - 2 * dot * nx) * 0.62;
+      ball.vy = (ball.vy - 2 * dot * ny) * 0.62;
+      // Add randomness
+      ball.vx += (Math.random() - 0.5) * 1.2;
+      // Push out
+      ball.x = p.x + nx * (minDist + 0.5);
+      ball.y = p.y + ny * (minDist + 0.5);
+      // Peg flash + particles
+      pegFlashes[i] = { life: 1, ring: 0 };
+      pegHitParticles(p.x, p.y);
+      // Screen shake (small)
+      shakeMag = Math.min(shakeMag + 1.5, 3);
+    }
+  }
+
+  // Landing check
+  if (ball.y > PRIZE_Y_START + BALL_R * 2) {
+    ball.slotIdx = Math.min(COLS - 1, Math.max(0, Math.floor(ball.x / SLOT_W)));
+    ball.landed = true;
+    onBallLanded(ball.slotIdx, ball.x);
+  }
+}
+
+async function onBallLanded(slotIdx, x) {
+  const prize = PRIZES[slotIdx];
+  const landY = PRIZE_Y_START + 30;
+
+  // Big shake
+  shakeMag = prize >= 10000 ? 18 : prize >= 1000 ? 10 : prize >= 500 ? 6 : 2;
+
+  // Particles
+  landingParticles(x, landY, prize);
+
+  // Announce
+  showAnnounce(prize, selRep?.name || '');
+
+  // DB write
+  if (selRep) {
+    try {
+      await sb.from('rd_reps').update({
+        tokens: Math.max(0, selRep.tokens - 1),
+        total_won: (selRep.total_won || 0) + prize,
+      }).eq('id', selRep.id);
+
+      await sb.from('rd_drops').insert({
+        rep_name: selRep.name,
+        prize_amount: prize,
+        slot_index: slotIdx,
+      });
+
+      await loadData();
+    } catch(e) { console.warn('DB write failed:', e); }
+  }
+
+  setTimeout(() => {
+    dropping = false;
+    ball = null;
+    trail = [];
+    hideAnnounce();
+    document.getElementById('drop-btn').disabled = false;
+  }, 3200);
+}
+
+/* ════════════════════════════════════════════
+   DRAW
+   ════════════════════════════════════════════ */
+let jackpotHue = 0;
+let time = 0;
+
+function draw() {
+  time++;
+  jackpotHue = (jackpotHue + 0.7) % 360;
+
+  // Screen shake decay
+  if (shakeMag > 0.05) {
+    shakeX = (Math.random() - .5) * shakeMag;
+    shakeY = (Math.random() - .5) * shakeMag;
+    shakeMag *= 0.88;
+  } else { shakeX = 0; shakeY = 0; shakeMag = 0; }
+
+  ctx.save();
+  ctx.clearRect(0, 0, CW, CH);
+
+  // Background
+  ctx.fillStyle = '#07070f';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // BG particles
+  bgParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = CW; if (p.x > CW) p.x = 0;
+    if (p.y < 0) p.y = CH; if (p.y > CH) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${p.hue},100%,70%,${p.a})`;
+    ctx.fill();
+  });
+
+  // Shake transform
+  ctx.translate(shakeX, shakeY);
+
+  // Prize slots
+  drawPrizeSlots();
+
+  // Pegs
+  drawPegs();
+
+  // Trail
+  if (trail.length > 1) {
+    trail.forEach((pt, i) => {
+      const alpha = (i / trail.length) * 0.6;
+      const r = BALL_R * (i / trail.length) * 0.7;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,215,0,${alpha})`;
+      ctx.fill();
+    });
+  }
+
+  // Ball
+  if (ball) {
+    const grd = ctx.createRadialGradient(ball.x - BALL_R*0.3, ball.y - BALL_R*0.3, 1, ball.x, ball.y, BALL_R * 1.4);
+    grd.addColorStop(0,   '#fffde7');
+    grd.addColorStop(0.4, '#ffd700');
+    grd.addColorStop(1,   'rgba(255,100,0,0)');
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Particles
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x  += p.vx; p.y += p.vy;
+    p.vy += p.gravity;
+    p.vx *= 0.97;
+    p.life -= p.decay;
+    const [r,g,b] = p.color;
+    if (p.glow) { ctx.shadowBlur = 8; ctx.shadowColor = `rgb(${r},${g},${b})`; }
+    ctx.globalAlpha = Math.max(0, p.life);
+    if (p.shape === 'square') {
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  });
+
+  ctx.restore();
+
+  // Lane indicator (above board)
+  drawLaneIndicator();
+
+  // Update physics
+  if (dropping && ball && !ball.landed) updateBall();
+
+  animId = requestAnimationFrame(draw);
+}
+
+function drawPegs() {
+  PEGS.forEach((p, i) => {
+    const flash = pegFlashes[i];
+    if (flash) {
+      // Expanding ring
+      flash.ring += 3;
+      flash.life -= 0.05;
+      if (flash.life <= 0) { delete pegFlashes[i]; }
+      else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, PEG_R + flash.ring, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(200,255,0,${flash.life * 0.6})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+    const pulse = flash ? flash.life : 0;
+    const glowR = 200 + Math.round(pulse * 55), glowG = 200 + Math.round(pulse * 55), glowB = 255;
+    ctx.shadowBlur = 8 + pulse * 20;
+    ctx.shadowColor = flash ? `rgba(200,255,0,0.9)` : 'rgba(140,160,255,0.5)';
+    const grd = ctx.createRadialGradient(p.x - 1.5, p.y - 1.5, 0.5, p.x, p.y, PEG_R);
+    grd.addColorStop(0, flash ? '#ffffff' : '#dde8ff');
+    grd.addColorStop(1, flash ? '#c8ff00' : '#8090c0');
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, PEG_R, 0, Math.PI*2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+}
+
+function drawPrizeSlots() {
+  const sh = CH - PRIZE_Y_START;
+  PRIZES.forEach((prize, i) => {
+    const sx = i * SLOT_W, sy = PRIZE_Y_START;
+    const sc = SLOT_COLS[i];
+    const isJack = prize >= 10000;
+
+    // Slot background
+    ctx.fillStyle = sc.bg;
+    ctx.fillRect(sx + 1, sy + 1, SLOT_W - 2, sh - 2);
+
+    // Border
+    if (isJack) {
+      const glowA = 0.5 + 0.5 * Math.sin(time * 0.06);
+      ctx.shadowBlur = 20 + glowA * 20;
+      ctx.shadowColor = `hsl(${jackpotHue},100%,60%)`;
+      ctx.strokeStyle = `hsl(${jackpotHue},100%,60%)`;
+    } else {
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = sc.border;
+    }
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(sx + 1, sy + 1, SLOT_W - 2, sh - 2);
+    ctx.shadowBlur = 0;
+
+    // Prize label
+    ctx.font = `bold ${prize >= 1000 ? '12' : '13'}px Bebas Neue, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (isJack) {
+      ctx.fillStyle = `hsl(${jackpotHue},100%,65%)`;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = `hsl(${jackpotHue},100%,50%)`;
+    } else {
+      ctx.fillStyle = prize === 0 ? '#2a2a4a' : sc.label;
+    }
+    const label = prize === 0 ? '$0' : prize >= 1000 ? `$${(prize/1000).toFixed(prize>=10000?0:0)}K` : `$${prize}`;
+    ctx.fillText(label, sx + SLOT_W / 2, sy + sh / 2);
+    ctx.shadowBlur = 0;
+  });
+}
+
+function drawLaneIndicator() {
+  if (dropping || !selRep) return;
+  const x = SLOT_W / 2 + selLane * SLOT_W;
+  const y = 16;
+  // Arrow pointing down
+  ctx.save();
+  ctx.globalAlpha = 0.6 + 0.4 * Math.abs(Math.sin(time * 0.08));
+  ctx.fillStyle = '#c8ff00';
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = '#c8ff00';
+  ctx.beginPath();
+  ctx.moveTo(x, y + 12);
+  ctx.lineTo(x - 8, y);
+  ctx.lineTo(x + 8, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ════════════════════════════════════════════
+   UI
+   ════════════════════════════════════════════ */
+function renderRepList() {
+  const el = document.getElementById('rep-list');
+  el.innerHTML = '';
+  reps.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'rep-item' + (selRep?.id === r.id ? ' active' : '');
+    div.innerHTML = `<span>${r.name}</span><span class="rep-tokens">${r.tokens}</span>`;
+    div.onclick = () => selectRep(r);
+    el.appendChild(div);
+  });
+}
+
+function selectRep(r) {
+  selRep = r;
+  renderRepList();
+  const td = document.getElementById('token-display');
+  td.innerHTML = `<div class="lbl">${r.name}</div><div class="big">${r.tokens}</div><div class="lbl">tokens remaining</div>`;
+  document.getElementById('drop-btn').disabled = r.tokens <= 0 || dropping;
+}
+
+function updateLaneBtns() {
+  document.querySelectorAll('.lane-btn').forEach((b, i) => {
+    b.classList.toggle('sel', i === selLane);
+  });
+}
+
+function buildLaneBtns() {
+  const el = document.getElementById('lane-btns');
+  el.innerHTML = '';
+  for (let i = 0; i < COLS; i++) {
+    const b = document.createElement('button');
+    b.className = 'lane-btn' + (i === selLane ? ' sel' : '');
+    b.textContent = i + 1;
+    b.onclick = () => { selLane = i; updateLaneBtns(); };
+    el.appendChild(b);
+  }
+}
+
+function renderHistory() {
+  const el = document.getElementById('hist-list');
+  el.innerHTML = '';
+  drops.slice(0, 20).forEach(d => {
+    const cls = d.prize_amount >= 10000 ? 'jackpot' : d.prize_amount >= 1000 ? 'high' : d.prize_amount >= 500 ? 'mid' : 'low';
+    const label = d.prize_amount >= 1000 ? `$${d.prize_amount/1000}K` : `$${d.prize_amount}`;
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = `<span class="hist-name">${d.rep_name}</span><span class="hist-amount ${cls}">${label}</span>`;
+    el.appendChild(div);
+  });
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('lb-list');
+  const sorted = [...reps].sort((a, b) => (b.total_won || 0) - (a.total_won || 0));
+  el.innerHTML = '';
+  sorted.slice(0, 8).forEach((r, i) => {
+    const won = r.total_won || 0;
+    const div = document.createElement('div');
+    div.className = 'lb-item';
+    div.innerHTML = `<span class="lb-rank">${i+1}</span><span class="lb-name">${r.name}</span><span class="lb-won">${won>=1000?`$${won/1000}K`:`$${won}`}</span>`;
+    el.appendChild(div);
+  });
+}
+
+function showAnnounce(prize, repName) {
+  const box   = document.getElementById('announce-box');
+  const pEl   = document.getElementById('announce-prize');
+  const sEl   = document.getElementById('announce-sub');
+  const isJ   = prize >= 10000;
+  const label = prize === 0 ? 'BETTER LUCK\nNEXT TIME' : prize >= 1000 ? `$${prize.toLocaleString()}` : `$${prize}`;
+  pEl.textContent = label;
+  pEl.style.color = isJ ? '#ffd700' : prize >= 1000 ? '#c8ff00' : prize >= 500 ? '#00d4ff' : '#4a4a6a';
+  if (isJ) pEl.style.textShadow = '0 0 40px rgba(255,215,0,0.8)';
+  else pEl.style.textShadow = '';
+  sEl.textContent = prize === 0 ? '' : `${repName} wins!`;
+  box.classList.add('show');
+  announcing = true;
+}
+function hideAnnounce() {
+  document.getElementById('announce-box').classList.remove('show');
+  announcing = false;
+}
+
+/* ════════════════════════════════════════════
+   ACTIONS
+   ════════════════════════════════════════════ */
+async function triggerDrop() {
+  if (!selRep || selRep.tokens <= 0 || dropping) return;
+  document.getElementById('drop-btn').disabled = true;
+  startDrop(selLane);
+}
+
+async function adminSetTokens() {
+  const name = document.getElementById('admin-rep-input').value.trim();
+  const toks = parseInt(document.getElementById('admin-tok-input').value);
+  if (!name || isNaN(toks)) return;
+  const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    await sb.from('rd_reps').update({ tokens: toks }).eq('id', existing.id);
+  } else {
+    await sb.from('rd_reps').insert({ name, tokens: toks });
+  }
+  await loadData();
+  document.getElementById('admin-rep-input').value = '';
+  document.getElementById('admin-tok-input').value = '';
+}
+
+/* ════════════════════════════════════════════
+   DATA LOADING
+   ════════════════════════════════════════════ */
+async function loadData() {
+  try {
+    const [repsRes, dropsRes] = await Promise.all([
+      sb.from('rd_reps').select('*').order('name'),
+      sb.from('rd_drops').select('*').order('created_at', {ascending:false}).limit(30),
+    ]);
+    if (repsRes.data)  reps  = repsRes.data;
+    if (dropsRes.data) drops = dropsRes.data;
+
+    // Update selRep reference
+    if (selRep) selRep = reps.find(r => r.id === selRep.id) || null;
+
+    renderRepList();
+    renderHistory();
+    renderLeaderboard();
+    if (selRep) selectRep(selRep);
+  } catch(e) {
+    console.warn('DB error:', e);
+    // Use demo data if DB not set up yet
+    if (!reps.length) {
+      reps = [
+        {id:'1',name:'Andrew R.',tokens:5,total_won:0},
+        {id:'2',name:'Bryan F.',tokens:3,total_won:0},
+        {id:'3',name:'Ryan D.',tokens:8,total_won:0},
+        {id:'4',name:'Tyler D.',tokens:2,total_won:0},
+      ];
+      renderRepList();
+    }
+  }
+}
+
+/* ════════════════════════════════════════════
+   SETUP MODAL
+   ════════════════════════════════════════════ */
+function showSetup() {
+  document.getElementById('setup-sql').textContent = SETUP_SQL;
+  document.getElementById('setup-modal').classList.add('open');
+}
+
+/* ════════════════════════════════════════════
+   PASSWORD GATE
+   ════════════════════════════════════════════ */
+function checkGate() {
+  const val = document.getElementById('gate-input').value.trim();
+  if (val === ADMIN_PASS) { isAdmin = true; launch(); }
+  else if (val === PASS)  { isAdmin = false; launch(); }
+  else { document.getElementById('gate-err').textContent = 'Wrong password'; }
+}
+
+function launch() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  if (isAdmin) document.getElementById('admin-bar').style.display = 'flex';
+  buildLaneBtns();
+  loadData();
+  draw();
+}
+
+document.getElementById('gate-input').focus();
+</script>
+</body>
+</html>
