@@ -227,10 +227,10 @@ let isAdmin      = false;
 const COLS   = 9;      // prize slots
 const ROWS   = 12;     // peg rows
 const CW     = 660;    // canvas width
-const CH     = 700;    // canvas height
+const CH     = 720;    // canvas height
 const SLOT_W = CW / COLS;   // 73.3px
-const ROW_H  = 52;           // vertical spacing
-const TOP_Y  = 70;           // first peg row y
+const ROW_H  = 46;           // vertical spacing
+const TOP_Y  = 55;           // first peg row y
 const PEG_R  = 7;
 const BALL_R = 12;
 const PRIZE_Y_START = TOP_Y + ROWS * ROW_H; // bottom of peg zone
@@ -600,7 +600,7 @@ function draw() {
   drawLaneIndicator();
 
   // Update physics
-  if (dropping && ball && !ball.landed) updateBall();
+  if (dropping && ball && !ball.landed) { try { updateBall(); } catch(e) { console.error("physics err:", e); } }
 
   animId = requestAnimationFrame(draw);
 }
@@ -662,7 +662,7 @@ function drawPrizeSlots() {
     ctx.shadowBlur = 0;
 
     // Prize label
-    ctx.font = `bold ${prize >= 1000 ? '12' : '13'}px Bebas Neue, sans-serif`;
+    ctx.font = `bold ${prize >= 10000 ? '16' : prize >= 1000 ? '14' : '15'}px Bebas Neue, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     if (isJack) {
