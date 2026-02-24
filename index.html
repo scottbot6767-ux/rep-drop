@@ -104,18 +104,26 @@ canvas{display:block;border-radius:8px;border:1px solid var(--border)}
 .setup-box h2{font-family:var(--font-head);font-size:1.6rem;letter-spacing:.1em;margin-bottom:.5rem;color:var(--lime)}
 .setup-box p{font-size:.82rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem}
 .setup-close{background:none;border:1px solid var(--border);border-radius:4px;padding:.4rem 1rem;font-family:var(--font-sub);font-size:.8rem;color:var(--dim);cursor:pointer;margin-top:1rem}
+
+/* ── Add/Edit rep block ── */
+.add-rep-block{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:5px;padding:.65rem;display:flex;flex-direction:column;gap:.4rem}
+.add-rep-title{font-family:var(--font-head);font-size:.75rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+.add-rep-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:.4rem .55rem;font-family:var(--font-body);font-size:.82rem;color:var(--text);outline:none;transition:border-color .2s}
+.add-rep-input:focus{border-color:var(--lime)}
+.add-rep-input::placeholder{color:var(--dim);font-size:.78rem}
+.add-rep-btn{flex:1;background:var(--lime);border:none;border-radius:3px;padding:.4rem .6rem;font-family:var(--font-head);font-size:.85rem;letter-spacing:.12em;color:#000;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.add-rep-btn:hover{opacity:.8}
+.add-rep-msg{font-size:.7rem;font-family:var(--font-sub);letter-spacing:.08em;color:var(--lime);min-height:.9rem;text-align:center}
+
+/* ── Test drop button ── */
+.test-drop-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:5px;padding:.45rem;font-family:var(--font-head);font-size:1rem;letter-spacing:.15em;color:var(--dim);cursor:pointer;transition:all .2s}
+.test-drop-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.test-drop-btn:disabled{opacity:.3;pointer-events:none}
 </style>
 </head>
 <body>
 
-<!-- PASSWORD GATE -->
-<div id="gate">
-  <div class="gate-logo">REP DROP</div>
-  <div class="gate-sub">Internal Game — Rankings.io</div>
-  <input class="gate-input" id="gate-input" type="password" placeholder="enter password" onkeydown="if(event.key==='Enter')checkGate()">
-  <button class="gate-btn" onclick="checkGate()">ENTER</button>
-  <div class="gate-err" id="gate-err"></div>
-</div>
+<!-- NO GATE -->
 
 <!-- MAIN APP -->
 <div id="app">
@@ -128,16 +136,22 @@ canvas{display:block;border-radius:8px;border:1px solid var(--border)}
       <div class="lbl">tokens remaining</div>
     </div>
     <div class="scrollable" id="rep-list"></div>
-    <!-- Admin: give tokens -->
-    <div class="admin-bar" id="admin-bar" style="display:none">
-      <input id="admin-rep-input" type="text" placeholder="Rep name…">
-      <input id="admin-tok-input" type="number" min="0" placeholder="Tokens" style="width:60px">
-      <button onclick="adminSetTokens()">SET</button>
+
+    <!-- Add / Edit Rep -->
+    <div class="add-rep-block">
+      <div class="add-rep-title">ADD / EDIT REP</div>
+      <input class="add-rep-input" id="add-rep-name" type="text" placeholder="Rep name">
+      <div style="display:flex;gap:.4rem">
+        <input class="add-rep-input" id="add-rep-tokens" type="number" min="0" placeholder="Tokens" style="width:80px;flex-shrink:0">
+        <button class="add-rep-btn" onclick="upsertRep()">SAVE</button>
+      </div>
+      <div class="add-rep-msg" id="add-rep-msg"></div>
     </div>
-    <div style="display:flex;gap:.4rem">
-      <button class="drop-btn" id="drop-btn" disabled onclick="triggerDrop()">DROP!</button>
-    </div>
-    <button onclick="showSetup()" style="background:none;border:none;color:var(--dim);font-size:.65rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center">DB Setup</button>
+
+    <!-- Drop buttons -->
+    <button class="drop-btn" id="drop-btn" disabled onclick="triggerDrop(false)">DROP!</button>
+    <button class="test-drop-btn" id="test-drop-btn" onclick="triggerDrop(true)">Test Drop</button>
+    <button onclick="showSetup()" style="background:none;border:none;color:var(--dim);font-size:.62rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center;padding-top:.2rem">DB Setup</button>
   </div>
 
   <!-- BOARD -->
@@ -372,7 +386,7 @@ function hslToRgb(h, s, l) {
 /* ════════════════════════════════════════════
    PHYSICS
    ════════════════════════════════════════════ */
-function startDrop(lane) {
+function startDrop(lane, testMode = false) {
   const x = SLOT_W / 2 + lane * SLOT_W;
   ball = {
     x, y: 10,
@@ -380,6 +394,7 @@ function startDrop(lane) {
     vy: 0,
     landed: false,
     slotIdx: -1,
+    testMode,
   };
   trail = [];
   dropping = true;
@@ -438,6 +453,7 @@ function updateBall() {
 }
 
 async function onBallLanded(slotIdx, x) {
+  const testMode = ball ? ball.testMode : false;
   const prize = PRIZES[slotIdx];
   const landY = PRIZE_Y_START + 30;
 
@@ -450,8 +466,8 @@ async function onBallLanded(slotIdx, x) {
   // Announce
   showAnnounce(prize, selRep?.name || '');
 
-  // DB write
-  if (selRep) {
+  // DB write (skip on test drops)
+  if (selRep && !testMode) {
     try {
       await sb.from('rd_reps').update({
         tokens: Math.max(0, selRep.tokens - 1),
@@ -473,7 +489,8 @@ async function onBallLanded(slotIdx, x) {
     ball = null;
     trail = [];
     hideAnnounce();
-    document.getElementById('drop-btn').disabled = false;
+    document.getElementById('drop-btn').disabled = !selRep || (selRep?.tokens ?? 0) <= 0;
+    document.getElementById('test-drop-btn').disabled = false;
   }, 3200);
 }
 
@@ -536,11 +553,17 @@ function draw() {
   // Ball
   if (ball) {
     const grd = ctx.createRadialGradient(ball.x - BALL_R*0.3, ball.y - BALL_R*0.3, 1, ball.x, ball.y, BALL_R * 1.4);
-    grd.addColorStop(0,   '#fffde7');
-    grd.addColorStop(0.4, '#ffd700');
-    grd.addColorStop(1,   'rgba(255,100,0,0)');
+    if (ball.testMode) {
+      grd.addColorStop(0,   '#e0ffff');
+      grd.addColorStop(0.4, '#00d4ff');
+      grd.addColorStop(1,   'rgba(0,100,200,0)');
+    } else {
+      grd.addColorStop(0,   '#fffde7');
+      grd.addColorStop(0.4, '#ffd700');
+      grd.addColorStop(1,   'rgba(255,100,0,0)');
+    }
     ctx.shadowBlur = 22;
-    ctx.shadowColor = '#ffd700';
+    ctx.shadowColor = ball.testMode ? '#00d4ff' : '#ffd700';
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2);
     ctx.fillStyle = grd;
@@ -765,10 +788,43 @@ function hideAnnounce() {
 /* ════════════════════════════════════════════
    ACTIONS
    ════════════════════════════════════════════ */
-async function triggerDrop() {
-  if (!selRep || selRep.tokens <= 0 || dropping) return;
+
+  async function upsertRep() {
+    const name  = document.getElementById('add-rep-name').value.trim();
+    const toks  = parseInt(document.getElementById('add-rep-tokens').value);
+    const msgEl = document.getElementById('add-rep-msg');
+    if (!name) { msgEl.style.color='#ff2d78'; msgEl.textContent='Enter a name.'; return; }
+    if (isNaN(toks) || toks < 0) { msgEl.style.color='#ff2d78'; msgEl.textContent='Enter token count (0+).'; return; }
+
+    msgEl.style.color='var(--dim)'; msgEl.textContent='Saving…';
+
+    try {
+      const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        await sb.from('rd_reps').update({ tokens: toks }).eq('id', existing.id);
+        msgEl.style.color='var(--lime)'; msgEl.textContent=`${name} updated → ${toks} tokens`;
+      } else {
+        await sb.from('rd_reps').insert({ name, tokens: toks, total_won: 0 });
+        msgEl.style.color='var(--lime)'; msgEl.textContent=`${name} added with ${toks} tokens`;
+      }
+      document.getElementById('add-rep-name').value  = '';
+      document.getElementById('add-rep-tokens').value = '';
+      await loadData();
+    } catch(e) {
+      msgEl.style.color='#ff2d78';
+      msgEl.textContent='Save failed — check DB setup.';
+    }
+    setTimeout(() => { msgEl.textContent=''; }, 3000);
+  }
+
+  async function adminSetTokens() { /* legacy — upsertRep() replaces this */ }
+
+  async function triggerDrop(testMode = false) {
+  if (dropping) return;
+  if (!testMode && (!selRep || selRep.tokens <= 0)) return;
   document.getElementById('drop-btn').disabled = true;
-  startDrop(selLane);
+  document.getElementById('test-drop-btn').disabled = true;
+  startDrop(selLane, testMode);
 }
 
 async function adminSetTokens() {
@@ -839,15 +895,13 @@ function checkGate() {
 }
 
 function launch() {
-  document.getElementById('gate').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  if (isAdmin) document.getElementById('admin-bar').style.display = 'flex';
   buildLaneBtns();
   loadData();
   draw();
 }
 
-document.getElementById('gate-input').focus();
+launch();
 </script>
 </body>
 </html>
