@@ -250,7 +250,7 @@ for (let r = 0; r < ROWS; r++) {
   }
 }
 
-const PRIZES     = [0, 100, 500, 1000, 10000, 1000, 500, 100, 0];
+const PRIZES     = [1, 5, 10, 25, 50, 25, 10, 5, 1];
 const SLOT_COLS  = [
   {bg:'#0d0d1c',border:'#1e1e32',label:'#2a2a4a'},
   {bg:'#060f1e',border:'#0e3060',label:'#1a6aa0'},
@@ -351,8 +351,8 @@ function pegHitParticles(x, y) {
 }
 
 function landingParticles(x, y, prize) {
-  const count = prize >= 10000 ? 120 : prize >= 1000 ? 70 : prize >= 500 ? 40 : 20;
-  const isJack = prize >= 10000;
+  const count = prize >= 50 ? 120 : prize >= 25 ? 70 : prize >= 10 ? 40 : 20;
+  const isJack = prize >= 50;
   spawnParticles(x, y - 20, count,
     (i, n) => {
       if (isJack) {
@@ -363,7 +363,7 @@ function landingParticles(x, y, prize) {
       const t = Math.random();
       return t < .4 ? [255,215,0] : (t < .7 ? [200,255,0] : [0,212,255]);
     },
-    { speed: prize >= 1000 ? 7 : 5, decay: 0.015, size: 5, gravity: 0.2, upBias: 3, glow: true }
+    { speed: prize >= 25 ? 7 : 5, decay: 0.015, size: 5, gravity: 0.2, upBias: 3, glow: true }
   );
   // coin spray
   if (prize >= 500) {
@@ -458,7 +458,7 @@ async function onBallLanded(slotIdx, x) {
   const landY = PRIZE_Y_START + 30;
 
   // Big shake
-  shakeMag = prize >= 10000 ? 18 : prize >= 1000 ? 10 : prize >= 500 ? 6 : 2;
+  shakeMag = prize >= 50 ? 18 : prize >= 25 ? 10 : prize >= 10 ? 6 : 2;
 
   // Particles
   landingParticles(x, landY, prize);
@@ -667,7 +667,7 @@ function drawPrizeSlots() {
     ctx.shadowBlur = 0;
 
     // Prize label
-    ctx.font = `bold ${prize >= 10000 ? '16' : prize >= 1000 ? '14' : '15'}px Bebas Neue, sans-serif`;
+    ctx.font = `bold ${prize >= 50 ? '16' : prize >= 25 ? '14' : '15'}px Bebas Neue, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     if (isJack) {
@@ -677,7 +677,7 @@ function drawPrizeSlots() {
     } else {
       ctx.fillStyle = prize === 0 ? '#2a2a4a' : sc.label;
     }
-    const label = prize === 0 ? '$0' : prize >= 1000 ? `$${(prize/1000).toFixed(prize>=10000?0:0)}K` : `$${prize}`;
+    const label = `$${prize}`;
     ctx.fillText(label, sx + SLOT_W / 2, sy + sh / 2);
     ctx.shadowBlur = 0;
   });
@@ -749,8 +749,8 @@ function renderHistory() {
   const el = document.getElementById('hist-list');
   el.innerHTML = '';
   drops.slice(0, 20).forEach(d => {
-    const cls = d.prize_amount >= 10000 ? 'jackpot' : d.prize_amount >= 1000 ? 'high' : d.prize_amount >= 500 ? 'mid' : 'low';
-    const label = d.prize_amount >= 1000 ? `$${d.prize_amount/1000}K` : `$${d.prize_amount}`;
+    const cls = d.prize_amount >= 50 ? 'jackpot' : d.prize_amount >= 25 ? 'high' : d.prize_amount >= 500 ? 'mid' : 'low';
+    const label = `$${d.prize_amount}`;
     const div = document.createElement('div');
     div.className = 'hist-item';
     div.innerHTML = `<span class="hist-name">${d.rep_name}</span><span class="hist-amount ${cls}">${label}</span>`;
@@ -775,10 +775,10 @@ function showAnnounce(prize, repName) {
   const box   = document.getElementById('announce-box');
   const pEl   = document.getElementById('announce-prize');
   const sEl   = document.getElementById('announce-sub');
-  const isJ   = prize >= 10000;
-  const label = prize === 0 ? 'BETTER LUCK\nNEXT TIME' : prize >= 1000 ? `$${prize.toLocaleString()}` : `$${prize}`;
+  const isJ   = prize >= 50;
+  const label = prize <= 1 ? 'BETTER LUCK\nNEXT TIME' : prize >= 25 ? `$${prize.toLocaleString()}` : `$${prize}`;
   pEl.textContent = label;
-  pEl.style.color = isJ ? '#ffd700' : prize >= 1000 ? '#c8ff00' : prize >= 500 ? '#00d4ff' : '#4a4a6a';
+  pEl.style.color = isJ ? '#ffd700' : prize >= 25 ? '#c8ff00' : prize >= 10 ? '#00d4ff' : '#aaaacc';
   if (isJ) pEl.style.textShadow = '0 0 40px rgba(255,215,0,0.8)';
   else pEl.style.textShadow = '';
   sEl.textContent = prize === 0 ? '' : `${repName} wins!`;
