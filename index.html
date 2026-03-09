@@ -19,40 +19,76 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden}
 
-/* ─── PASSWORD GATE ─── */
-#gate{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+/* ─── PLAYER GATE ─── */
+#gate{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;overflow-y:auto;padding:2rem}
+#gate.hidden{display:none}
 .gate-logo{font-family:var(--font-head);font-size:clamp(3rem,8vw,6rem);letter-spacing:.08em;color:var(--lime);line-height:1;text-shadow:0 0 60px rgba(200,255,0,.4)}
 .gate-sub{font-family:var(--font-sub);font-size:1rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
-.gate-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:4px;padding:.75rem 1.25rem;font-family:var(--font-body);font-size:1rem;color:var(--text);text-align:center;width:260px;outline:none;transition:border-color .2s}
-.gate-input:focus{border-color:var(--lime)}
-.gate-btn{background:var(--lime);border:none;border-radius:4px;padding:.75rem 2.5rem;font-family:var(--font-head);font-size:1.4rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:opacity .2s}
-.gate-btn:hover{opacity:.85}
-.gate-err{color:var(--magenta);font-size:.8rem;font-family:var(--font-sub);letter-spacing:.1em;min-height:1rem}
+.gate-label{font-family:var(--font-sub);font-size:.85rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:1rem}
+.player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;max-width:660px;width:100%;margin-top:.5rem}
+.player-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem;text-align:center;cursor:pointer;transition:all .2s}
+.player-card:hover{border-color:var(--lime);background:rgba(200,255,0,.05);transform:translateY(-2px)}
+.player-card.selected{border-color:var(--lime);background:rgba(200,255,0,.1);box-shadow:0 0 20px rgba(200,255,0,.15)}
+.player-card img{width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:.4rem;border:2px solid var(--border);transition:border-color .2s}
+.player-card.selected img{border-color:var(--lime)}
+.player-card .pname{font-family:var(--font-sub);font-size:.85rem;font-weight:700;letter-spacing:.05em}
+.player-card .ptitle{font-size:.6rem;color:var(--dim);margin-top:.1rem}
+.gate-enter{background:var(--lime);border:none;border-radius:6px;padding:.85rem 3rem;font-family:var(--font-head);font-size:1.5rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:all .2s;margin-top:.75rem}
+.gate-enter:hover{box-shadow:0 0 30px rgba(200,255,0,.4);transform:scale(1.03)}
+.gate-enter:disabled{opacity:.3;pointer-events:none}
+.gate-admin-btn{background:none;border:none;color:var(--dim);font-family:var(--font-sub);font-size:.75rem;letter-spacing:.1em;cursor:pointer;margin-top:.5rem;text-decoration:underline}
+.gate-admin-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:4px;padding:.5rem 1rem;font-family:var(--font-body);font-size:.85rem;color:var(--text);text-align:center;width:200px;outline:none;display:none}
+.gate-admin-input:focus{border-color:var(--magenta)}
+.gate-admin-msg{font-family:var(--font-sub);font-size:.8rem;letter-spacing:.1em;min-height:1.2rem}
 
 /* ─── MAIN LAYOUT ─── */
-#app{display:none;height:100vh;display:none;grid-template-columns:220px 1fr 220px;grid-template-rows:1fr;gap:0;padding:12px;gap:12px}
+#app{display:none;height:100vh;grid-template-columns:220px 1fr 220px;grid-template-rows:1fr;padding:12px;gap:12px}
 #app.visible{display:grid}
 
 /* ─── PANELS ─── */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:.75rem;overflow:hidden}
 .panel-title{font-family:var(--font-head);font-size:1.4rem;letter-spacing:.15em;color:var(--lime);border-bottom:1px solid var(--border);padding-bottom:.5rem}
 
+/* Player profile in left panel */
+.my-profile{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.5rem 0}
+.my-profile img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--lime)}
+.my-profile .my-name{font-family:var(--font-sub);font-size:1rem;font-weight:700;letter-spacing:.05em;color:var(--lime)}
+.my-profile .my-title{font-size:.65rem;color:var(--dim)}
+
 /* Rep list */
 .rep-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .6rem;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font-sub);font-size:.9rem;font-weight:600;letter-spacing:.05em}
 .rep-item:hover{background:rgba(200,255,0,.07);border-color:rgba(200,255,0,.2)}
 .rep-item.active{background:rgba(200,255,0,.12);border-color:var(--lime);color:var(--lime)}
+.rep-item.me{background:rgba(200,255,0,.06)}
 .rep-tokens{font-size:.75rem;font-weight:700;background:rgba(255,215,0,.15);color:var(--gold);padding:.15rem .4rem;border-radius:3px;font-family:var(--font-head);letter-spacing:.05em}
-
-/* Drop button */
-.drop-btn{width:100%;background:var(--lime);border:none;border-radius:5px;padding:.8rem;font-family:var(--font-head);font-size:1.8rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:all .2s;margin-top:auto}
-.drop-btn:hover{box-shadow:0 0 30px rgba(200,255,0,.5)}
-.drop-btn:disabled{opacity:.35;pointer-events:none}
-.drop-btn.cooldown{background:var(--dim);color:#000}
 
 /* Token info */
 .token-display{text-align:center;padding:.5rem;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.15);border-radius:4px}
 .token-display .big{font-family:var(--font-head);font-size:2rem;color:var(--gold);line-height:1}
 .token-display .lbl{font-size:.65rem;font-family:var(--font-sub);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+
+/* Drop button */
+.drop-btn{width:100%;background:var(--lime);border:none;border-radius:5px;padding:.8rem;font-family:var(--font-head);font-size:1.8rem;letter-spacing:.15em;color:#000;cursor:pointer;transition:all .2s;margin-top:auto}
+.drop-btn:hover{box-shadow:0 0 30px rgba(200,255,0,.5)}
+.drop-btn:disabled{opacity:.35;pointer-events:none}
+
+/* Test drop button */
+.test-drop-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:5px;padding:.45rem;font-family:var(--font-head);font-size:1rem;letter-spacing:.15em;color:var(--dim);cursor:pointer;transition:all .2s}
+.test-drop-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.test-drop-btn:disabled{opacity:.3;pointer-events:none}
+
+/* Admin token controls */
+.admin-token-block{background:rgba(255,45,120,.05);border:1px solid rgba(255,45,120,.15);border-radius:5px;padding:.6rem;display:flex;flex-direction:column;gap:.4rem}
+.admin-token-block .atitle{font-family:var(--font-head);font-size:.7rem;letter-spacing:.2em;color:var(--magenta);text-transform:uppercase}
+.admin-token-row{display:flex;align-items:center;gap:.35rem}
+.admin-token-row .aname{flex:1;font-family:var(--font-sub);font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-token-input{width:50px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:.25rem .4rem;font-family:var(--font-body);font-size:.75rem;color:var(--text);text-align:center;outline:none}
+.admin-token-input:focus{border-color:var(--magenta)}
+.admin-token-btn{background:var(--magenta);border:none;border-radius:3px;padding:.25rem .5rem;font-family:var(--font-head);font-size:.65rem;letter-spacing:.08em;color:#fff;cursor:pointer;white-space:nowrap}
+.admin-token-msg{font-size:.65rem;color:var(--lime);font-family:var(--font-sub);min-height:.8rem;text-align:center}
+
+/* Logout */
+.logout-btn{background:none;border:none;color:var(--dim);font-size:.62rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center;padding-top:.2rem}
 
 /* History */
 .hist-item{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-sub);font-size:.82rem;padding:.3rem .4rem;border-radius:3px;border-bottom:1px solid rgba(255,255,255,.04)}
@@ -74,11 +110,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #title-bar{font-family:var(--font-head);font-size:2.8rem;letter-spacing:.25em;color:var(--lime);text-shadow:0 0 40px rgba(200,255,0,.35);text-align:center;line-height:1}
 #canvas-container{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
 canvas{display:block;border-radius:8px;border:1px solid var(--border)}
-
-/* ─── ADMIN ─── */
-.admin-bar{display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:4px}
-.admin-bar input{flex:1;background:none;border:none;font-family:var(--font-body);font-size:.8rem;color:var(--text);outline:none}
-.admin-bar button{background:var(--magenta);border:none;border-radius:3px;padding:.25rem .6rem;font-family:var(--font-head);font-size:.75rem;letter-spacing:.1em;color:#fff;cursor:pointer;white-space:nowrap}
 
 /* Announce overlay */
 #announce{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
@@ -105,21 +136,6 @@ canvas{display:block;border-radius:8px;border:1px solid var(--border)}
 .setup-box p{font-size:.82rem;color:var(--dim);line-height:1.6;margin-bottom:.75rem}
 .setup-close{background:none;border:1px solid var(--border);border-radius:4px;padding:.4rem 1rem;font-family:var(--font-sub);font-size:.8rem;color:var(--dim);cursor:pointer;margin-top:1rem}
 
-/* ── Add/Edit rep block ── */
-.add-rep-block{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:5px;padding:.65rem;display:flex;flex-direction:column;gap:.4rem}
-.add-rep-title{font-family:var(--font-head);font-size:.75rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
-.add-rep-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:.4rem .55rem;font-family:var(--font-body);font-size:.82rem;color:var(--text);outline:none;transition:border-color .2s}
-.add-rep-input:focus{border-color:var(--lime)}
-.add-rep-input::placeholder{color:var(--dim);font-size:.78rem}
-.add-rep-btn{flex:1;background:var(--lime);border:none;border-radius:3px;padding:.4rem .6rem;font-family:var(--font-head);font-size:.85rem;letter-spacing:.12em;color:#000;cursor:pointer;transition:opacity .2s;white-space:nowrap}
-.add-rep-btn:hover{opacity:.8}
-.add-rep-msg{font-size:.7rem;font-family:var(--font-sub);letter-spacing:.08em;color:var(--lime);min-height:.9rem;text-align:center}
-
-/* ── Test drop button ── */
-.test-drop-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:5px;padding:.45rem;font-family:var(--font-head);font-size:1rem;letter-spacing:.15em;color:var(--dim);cursor:pointer;transition:all .2s}
-.test-drop-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.test-drop-btn:disabled{opacity:.3;pointer-events:none}
-
 /* ── Host card (right panel) ── */
 .host-card{position:relative;border-radius:6px;overflow:hidden;height:180px;flex-shrink:0;background:#050510}
 .host-card img{width:100%;height:100%;object-fit:cover;object-position:22% center;display:block;filter:saturate(1.1)}
@@ -138,35 +154,46 @@ canvas{display:block;border-radius:8px;border:1px solid var(--border)}
 </head>
 <body>
 
-<!-- NO GATE -->
+<!-- ═══════ PLAYER GATE ═══════ -->
+<div id="gate">
+  <div class="gate-logo">REP DROP</div>
+  <div class="gate-sub">Plinko Challenge</div>
+  <div class="gate-label">Select Your Name</div>
+  <div class="player-grid" id="player-grid"></div>
+  <button class="gate-enter" id="gate-enter" disabled onclick="enterApp()">ENTER</button>
+  <button class="gate-admin-btn" id="gate-admin-btn" onclick="toggleAdminLogin()">Admin Login</button>
+  <input class="gate-admin-input" id="gate-admin-pw" type="password" placeholder="Admin password" style="display:none" onkeydown="if(event.key==='Enter')checkAdminPw()">
+  <div class="gate-admin-msg" id="gate-admin-msg"></div>
+</div>
 
-<!-- MAIN APP -->
+<!-- ═══════ MAIN APP ═══════ -->
 <div id="app">
   <!-- LEFT PANEL -->
-  <div class="panel">
-    <div class="panel-title">REPS</div>
+  <div class="panel" id="left-panel">
+    <div class="panel-title">YOUR DROP</div>
+    <div class="my-profile" id="my-profile"></div>
     <div class="token-display" id="token-display">
-      <div class="lbl">Select a Rep</div>
-      <div class="big">—</div>
-      <div class="lbl">tokens remaining</div>
+      <div class="lbl">Tokens Remaining</div>
+      <div class="big" id="my-tokens">0</div>
+      <div class="lbl">tokens</div>
     </div>
+
+    <!-- All reps list (collapsed for players, useful context) -->
+    <div class="panel-title" style="font-size:1rem;margin-top:.25rem">ALL REPS</div>
     <div class="scrollable" id="rep-list"></div>
 
-    <!-- Add / Edit Rep -->
-    <div class="add-rep-block">
-      <div class="add-rep-title">ADD / EDIT REP</div>
-      <input class="add-rep-input" id="add-rep-name" type="text" placeholder="Rep name">
-      <div style="display:flex;gap:.4rem">
-        <input class="add-rep-input" id="add-rep-tokens" type="number" min="0" placeholder="Tokens" style="width:80px;flex-shrink:0">
-        <button class="add-rep-btn" onclick="upsertRep()">SAVE</button>
-      </div>
-      <div class="add-rep-msg" id="add-rep-msg"></div>
+    <!-- Admin token controls (hidden for non-admin) -->
+    <div class="admin-token-block" id="admin-block" style="display:none">
+      <div class="atitle">Assign Tokens (Admin)</div>
+      <div id="admin-token-list"></div>
+      <div class="admin-token-msg" id="admin-token-msg"></div>
     </div>
 
     <!-- Drop buttons -->
     <button class="drop-btn" id="drop-btn" disabled onclick="triggerDrop(false)">DROP!</button>
     <button class="test-drop-btn" id="test-drop-btn" onclick="triggerDrop(true)">Test Drop</button>
-    <button onclick="showSetup()" style="background:none;border:none;color:var(--dim);font-size:.62rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center;padding-top:.2rem">DB Setup</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <button onclick="showSetup()" style="background:none;border:none;color:var(--dim);font-size:.55rem;font-family:var(--font-sub);letter-spacing:.1em;cursor:pointer;text-decoration:underline;text-align:center">DB Setup</button>
   </div>
 
   <!-- BOARD -->
@@ -243,27 +270,35 @@ CREATE POLICY "allow_all_drops" ON rd_drops FOR ALL USING (true) WITH CHECK (tru
 `.trim();
 
 /* ════════════════════════════════════════════
-   GAME CONFIG
+   PLAYERS & CONFIG
    ════════════════════════════════════════════ */
-const PASS       = 'drop';
+const CDN = 'https://res.cloudinary.com/dsethujks/image/upload/rankings-tools/headshots';
 const ADMIN_PASS = 'admin1234';
-let isAdmin      = false;
+
+const PLAYERS = [
+  { name:'Andrew Rockstroh', title:'Business Development', img:`${CDN}/Andrew.png` },
+  { name:'Bryan Fletcher',   title:'Business Development', img:`${CDN}/Bryan.png` },
+  { name:'Matt Delaune',     title:'Business Development', img:`${CDN}/Matt.png` },
+  { name:'Michael Helton',   title:'Business Development', img:`${CDN}/MichaelH.png` },
+  { name:'Michael Wynkoop',  title:'Business Development', img:`${CDN}/MichaelW.png` },
+  { name:'Sydney Darrow',    title:'Business Development', img:`${CDN}/Sydney.png` },
+  { name:'Ryan David',       title:'Business Development', img:`${CDN}/Ryan.png` },
+  { name:'Tyler Duprey',     title:'Business Development', img:`${CDN}/Tyler.png` },
+];
 
 // Board geometry
-const COLS   = 9;      // prize slots
-const ROWS   = 12;     // peg rows
-const CW     = 660;    // canvas width
-const CH     = 720;    // canvas height
-const SLOT_W = CW / COLS;   // 73.3px
-const ROW_H  = 46;           // vertical spacing
-const TOP_Y  = 55;           // first peg row y
+const COLS   = 9;
+const ROWS   = 12;
+const CW     = 660;
+const CH     = 720;
+const SLOT_W = CW / COLS;
+const ROW_H  = 46;
+const TOP_Y  = 55;
 const PEG_R  = 7;
 const BALL_R = 12;
-const PRIZE_Y_START = TOP_Y + ROWS * ROW_H; // bottom of peg zone
+const PRIZE_Y_START = TOP_Y + ROWS * ROW_H;
 
 // Peg positions
-// Even rows: 9 pegs at slot centers
-// Odd rows: 8 pegs at slot midpoints
 const PEGS = [];
 for (let r = 0; r < ROWS; r++) {
   const y = TOP_Y + r * ROW_H;
@@ -276,8 +311,8 @@ for (let r = 0; r < ROWS; r++) {
   }
 }
 
-const PRIZES     = [1, 5, 10, 25, 50, 25, 10, 5, 1];
-const SLOT_COLS  = [
+const PRIZES    = [1, 5, 10, 25, 50, 25, 10, 5, 1];
+const SLOT_COLS = [
   {bg:'#0d0d1c',border:'#1e1e32',label:'#2a2a4a'},
   {bg:'#060f1e',border:'#0e3060',label:'#1a6aa0'},
   {bg:'#0c0820',border:'#2a126a',label:'#6a30c8'},
@@ -292,25 +327,217 @@ const SLOT_COLS  = [
 /* ════════════════════════════════════════════
    STATE
    ════════════════════════════════════════════ */
-const DEMO_REPS = [
-  {id:'demo-1',name:'Andrew R.',tokens:5,total_won:0},
-  {id:'demo-2',name:'Bryan F.',tokens:3,total_won:0},
-  {id:'demo-3',name:'Ryan D.',tokens:8,total_won:0},
-  {id:'demo-4',name:'Tyler D.',tokens:2,total_won:0},
-];
-let reps       = [...DEMO_REPS];
+let currentPlayer = null; // the logged-in player object from PLAYERS
+let isAdmin    = false;
+let reps       = [];      // DB rep records
 let drops      = [];
-let selRep     = null;
-let selLane    = 4;  // default center
+let selRep     = null;    // the DB record for the current player
+let selLane    = 4;
 let dropping   = false;
 let ball       = null;
 let particles  = [];
 let trail      = [];
 let bgParticles= [];
-let pegFlashes = {}; // peg index → {life, ring}
+let pegFlashes = {};
 let shakeX = 0, shakeY = 0, shakeMag = 0;
 let announcing = false;
 let animId;
+
+/* ════════════════════════════════════════════
+   GATE
+   ════════════════════════════════════════════ */
+function renderGate() {
+  const grid = document.getElementById('player-grid');
+  grid.innerHTML = '';
+  PLAYERS.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'player-card';
+    div.innerHTML = `<img src="${p.img}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect fill=%22%230d0d20%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2238%22 text-anchor=%22middle%22 fill=%22%236a6a8a%22 font-size=%2220%22>${p.name[0]}</text></svg>'">
+      <div class="pname">${p.name}</div>
+      <div class="ptitle">${p.title}</div>`;
+    div.onclick = () => {
+      document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+      div.classList.add('selected');
+      currentPlayer = p;
+      document.getElementById('gate-enter').disabled = false;
+    };
+    grid.appendChild(div);
+  });
+}
+
+function toggleAdminLogin() {
+  const el = document.getElementById('gate-admin-pw');
+  const isHidden = !el.style.display || el.style.display === 'none';
+  el.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) { el.value = ''; el.focus(); }
+  document.getElementById('gate-admin-msg').textContent = '';
+}
+
+function checkAdminPw() {
+  const pw = document.getElementById('gate-admin-pw').value.trim();
+  const msgEl = document.getElementById('gate-admin-msg');
+  if (pw === ADMIN_PASS) {
+    isAdmin = true;
+    document.getElementById('gate-admin-pw').style.display = 'none';
+    document.getElementById('gate-admin-btn').textContent = '✓ ADMIN MODE';
+    document.getElementById('gate-admin-btn').style.color = 'var(--magenta)';
+    document.getElementById('gate-admin-btn').style.textDecoration = 'none';
+    msgEl.textContent = 'Admin mode enabled — select a player to continue';
+    msgEl.style.color = 'var(--magenta)';
+  } else {
+    msgEl.textContent = 'Wrong password';
+    msgEl.style.color = 'var(--magenta)';
+    document.getElementById('gate-admin-pw').value = '';
+    document.getElementById('gate-admin-pw').focus();
+  }
+}
+
+async function enterApp() {
+  if (!currentPlayer) return;
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+
+  // Show profile
+  document.getElementById('my-profile').innerHTML = `
+    <img src="${currentPlayer.img}" alt="${currentPlayer.name}">
+    <div class="my-name">${currentPlayer.name}</div>
+    <div class="my-title">${currentPlayer.title}</div>`;
+
+  // Show admin block
+  if (isAdmin) document.getElementById('admin-block').style.display = '';
+
+  // Ensure player exists in DB, load data, then launch game
+  await ensureAllPlayers();
+  await loadData();
+
+  // Auto-select self
+  selRep = reps.find(r => r.name === currentPlayer.name) || null;
+  updateMyTokens();
+
+  if (isAdmin) renderAdminTokenList();
+
+  buildLaneBtns();
+  draw();
+}
+
+function logout() {
+  currentPlayer = null;
+  isAdmin = false;
+  selRep = null;
+  reps = [];
+  drops = [];
+  dropping = false;
+  ball = null;
+  trail = [];
+  if (animId) cancelAnimationFrame(animId);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('gate-admin-btn').textContent = 'Admin Login';
+  document.getElementById('gate-admin-btn').style.color = '';
+  document.getElementById('gate-admin-btn').style.textDecoration = 'underline';
+  document.getElementById('gate-admin-msg').textContent = '';
+  document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('gate-enter').disabled = true;
+}
+
+/* ════════════════════════════════════════════
+   DATA
+   ════════════════════════════════════════════ */
+async function ensureAllPlayers() {
+  // Make sure all BDR players exist in rd_reps
+  for (const p of PLAYERS) {
+    try {
+      const { data } = await sb.from('rd_reps').select('id').eq('name', p.name).single();
+      if (!data) {
+        await sb.from('rd_reps').insert({ name: p.name, tokens: 0, total_won: 0 });
+      }
+    } catch(e) {
+      try { await sb.from('rd_reps').insert({ name: p.name, tokens: 0, total_won: 0 }); } catch(e2) {}
+    }
+  }
+}
+
+async function loadData() {
+  try {
+    const [repsRes, dropsRes] = await Promise.all([
+      sb.from('rd_reps').select('*').order('name'),
+      sb.from('rd_drops').select('*').order('created_at', {ascending:false}).limit(30),
+    ]);
+    if (repsRes.data && repsRes.data.length > 0) reps = repsRes.data;
+    if (dropsRes.data) drops = dropsRes.data;
+
+    // Update selRep reference
+    if (selRep) selRep = reps.find(r => r.id === selRep.id) || reps.find(r => r.name === currentPlayer?.name) || null;
+
+    updateMyTokens();
+    renderRepList();
+    renderHistory();
+    renderLeaderboard();
+  } catch(e) {
+    console.warn('DB error:', e);
+  }
+}
+
+function updateMyTokens() {
+  const tokens = selRep?.tokens ?? 0;
+  document.getElementById('my-tokens').textContent = tokens;
+  document.getElementById('drop-btn').disabled = tokens <= 0 || dropping;
+}
+
+/* ════════════════════════════════════════════
+   LEFT PANEL — REP LIST
+   ════════════════════════════════════════════ */
+function renderRepList() {
+  const el = document.getElementById('rep-list');
+  el.innerHTML = '';
+  // Only show BDR players (filter reps to those in PLAYERS list)
+  const playerNames = PLAYERS.map(p => p.name);
+  const filtered = reps.filter(r => playerNames.includes(r.name));
+  filtered.forEach(r => {
+    const isMe = r.name === currentPlayer?.name;
+    const div = document.createElement('div');
+    div.className = 'rep-item' + (isMe ? ' me active' : '');
+    div.innerHTML = `<span>${r.name}${isMe ? ' (you)' : ''}</span><span class="rep-tokens">${r.tokens}</span>`;
+    el.appendChild(div);
+  });
+}
+
+/* ════════════════════════════════════════════
+   ADMIN — TOKEN ASSIGNMENT
+   ════════════════════════════════════════════ */
+function renderAdminTokenList() {
+  const list = document.getElementById('admin-token-list');
+  list.innerHTML = '';
+  PLAYERS.forEach(p => {
+    const rep = reps.find(r => r.name === p.name);
+    const tokens = rep?.tokens ?? 0;
+    const div = document.createElement('div');
+    div.className = 'admin-token-row';
+    div.innerHTML = `
+      <span class="aname">${p.name}</span>
+      <span style="font-family:var(--font-head);font-size:.8rem;color:var(--gold);width:24px;text-align:center">${tokens}</span>
+      <input class="admin-token-input" type="number" min="0" value="${tokens}" id="atk-${p.name.replace(/\s/g,'-')}">
+      <button class="admin-token-btn" onclick="setTokens('${p.name}')">SET</button>`;
+    list.appendChild(div);
+  });
+}
+
+async function setTokens(name) {
+  const input = document.getElementById(`atk-${name.replace(/\s/g,'-')}`);
+  const val = parseInt(input.value);
+  const msgEl = document.getElementById('admin-token-msg');
+  if (isNaN(val) || val < 0) return;
+  try {
+    await sb.from('rd_reps').update({ tokens: val }).eq('name', name);
+    msgEl.textContent = `${name} → ${val} tokens`;
+    await loadData();
+    renderAdminTokenList();
+  } catch(e) {
+    msgEl.textContent = 'Failed — check DB';
+    msgEl.style.color = 'var(--magenta)';
+  }
+  setTimeout(() => { msgEl.textContent = ''; }, 2500);
+}
 
 /* ════════════════════════════════════════════
    CANVAS SETUP
@@ -320,7 +547,6 @@ const ctx    = canvas.getContext('2d');
 canvas.width  = CW;
 canvas.height = CH;
 
-// Click on canvas to choose lane
 canvas.addEventListener('click', e => {
   if (dropping || !selRep) return;
   const rect = canvas.getBoundingClientRect();
@@ -362,7 +588,6 @@ function spawnParticles(x, y, count, colorFn, opts = {}) {
       vy: Math.sin(angle) * speed - (opts.upBias || 0),
       life: 1,
       decay: (opts.decay || 0.022) * (0.8 + Math.random() * 0.4),
-      r: g, g: b, b: r,        // stored as [r,g,b]
       color: [r, g, b],
       size: (opts.size || 4) * (0.5 + Math.random() * 0.8),
       gravity: opts.gravity != null ? opts.gravity : 0.15,
@@ -397,7 +622,6 @@ function landingParticles(x, y, prize) {
     },
     { speed: prize >= 25 ? 7 : 5, decay: 0.015, size: 5, gravity: 0.2, upBias: 3, glow: true }
   );
-  // coin spray
   if (prize >= 500) {
     spawnParticles(x, y - 10, 30, () => [255,215,0],
       { speed: 6, decay: 0.018, size: 3, gravity: 0.3, upBias: 4, shape:'square' });
@@ -420,63 +644,39 @@ function hslToRgb(h, s, l) {
    ════════════════════════════════════════════ */
 function startDrop(lane, testMode = false) {
   const x = SLOT_W / 2 + lane * SLOT_W;
-  ball = {
-    x, y: 10,
-    vx: (Math.random() - 0.5) * 0.5,
-    vy: 0,
-    landed: false,
-    slotIdx: -1,
-    testMode,
-  };
+  ball = { x, y: 10, vx: (Math.random() - 0.5) * 0.5, vy: 0, landed: false, slotIdx: -1, testMode };
   trail = [];
   dropping = true;
 }
 
 function updateBall() {
   if (!ball || ball.landed) return;
-
-  // Gravity
   ball.vy += 0.28;
-  // Air resistance
   ball.vx *= 0.999;
-
   ball.x += ball.vx;
   ball.y += ball.vy;
-
-  // Trail
   trail.push({ x: ball.x, y: ball.y });
   if (trail.length > 28) trail.shift();
-
-  // Wall collisions
   if (ball.x - BALL_R < 0) { ball.x = BALL_R; ball.vx = Math.abs(ball.vx) * 0.6; }
   if (ball.x + BALL_R > CW) { ball.x = CW - BALL_R; ball.vx = -Math.abs(ball.vx) * 0.6; }
-
-  // Peg collisions
   for (let i = 0; i < PEGS.length; i++) {
     const p = PEGS[i];
     const dx = ball.x - p.x, dy = ball.y - p.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const minDist = BALL_R + PEG_R;
     if (dist < minDist && dist > 0.1) {
-      // Reflect
       const nx = dx / dist, ny = dy / dist;
       const dot = ball.vx * nx + ball.vy * ny;
       ball.vx = (ball.vx - 2 * dot * nx) * 0.62;
       ball.vy = (ball.vy - 2 * dot * ny) * 0.62;
-      // Add randomness
       ball.vx += (Math.random() - 0.5) * 1.2;
-      // Push out
       ball.x = p.x + nx * (minDist + 0.5);
       ball.y = p.y + ny * (minDist + 0.5);
-      // Peg flash + particles
       pegFlashes[i] = { life: 1, ring: 0 };
       pegHitParticles(p.x, p.y);
-      // Screen shake (small)
       shakeMag = Math.min(shakeMag + 1.5, 3);
     }
   }
-
-  // Landing check
   if (ball.y > PRIZE_Y_START + BALL_R * 2) {
     ball.slotIdx = Math.min(COLS - 1, Math.max(0, Math.floor(ball.x / SLOT_W)));
     ball.landed = true;
@@ -488,40 +688,30 @@ async function onBallLanded(slotIdx, x) {
   const testMode = ball ? ball.testMode : false;
   const prize = PRIZES[slotIdx];
   const landY = PRIZE_Y_START + 30;
-
-  // Big shake
   shakeMag = prize >= 50 ? 18 : prize >= 25 ? 10 : prize >= 10 ? 6 : 2;
-
-  // Particles
   landingParticles(x, landY, prize);
-
-  // Announce
   showAnnounce(prize, selRep?.name || '');
-
-  // DB write (skip on test drops)
   if (selRep && !testMode) {
     try {
       await sb.from('rd_reps').update({
         tokens: Math.max(0, selRep.tokens - 1),
         total_won: (selRep.total_won || 0) + prize,
       }).eq('id', selRep.id);
-
       await sb.from('rd_drops').insert({
         rep_name: selRep.name,
         prize_amount: prize,
         slot_index: slotIdx,
       });
-
       await loadData();
+      if (isAdmin) renderAdminTokenList();
     } catch(e) { console.warn('DB write failed:', e); }
   }
-
   setTimeout(() => {
     dropping = false;
     ball = null;
     trail = [];
     hideAnnounce();
-    document.getElementById('drop-btn').disabled = !selRep || (selRep?.tokens ?? 0) <= 0;
+    updateMyTokens();
     document.getElementById('test-drop-btn').disabled = false;
   }, 3200);
 }
@@ -533,26 +723,19 @@ let jackpotHue = 0;
 let time = 0;
 
 function draw() {
-  animId = requestAnimationFrame(draw); // schedule next frame first — can never be blocked
+  animId = requestAnimationFrame(draw);
   try {
   time++;
   jackpotHue = (jackpotHue + 0.7) % 360;
-
-  // Screen shake decay
   if (shakeMag > 0.05) {
     shakeX = (Math.random() - .5) * shakeMag;
     shakeY = (Math.random() - .5) * shakeMag;
     shakeMag *= 0.88;
   } else { shakeX = 0; shakeY = 0; shakeMag = 0; }
-
   ctx.save();
   ctx.clearRect(0, 0, CW, CH);
-
-  // Background
   ctx.fillStyle = '#07070f';
   ctx.fillRect(0, 0, CW, CH);
-
-  // BG particles
   bgParticles.forEach(p => {
     p.x += p.vx; p.y += p.vy;
     if (p.x < 0) p.x = CW; if (p.x > CW) p.x = 0;
@@ -562,17 +745,9 @@ function draw() {
     ctx.fillStyle = `hsla(${p.hue},100%,70%,${p.a})`;
     ctx.fill();
   });
-
-  // Shake transform
   ctx.translate(shakeX, shakeY);
-
-  // Prize slots
   drawPrizeSlots();
-
-  // Pegs
   drawPegs();
-
-  // Trail
   if (trail.length > 1) {
     trail.forEach((pt, i) => {
       const alpha = (i / trail.length) * 0.6;
@@ -583,18 +758,12 @@ function draw() {
       ctx.fill();
     });
   }
-
-  // Ball
   if (ball) {
     const grd = ctx.createRadialGradient(ball.x - BALL_R*0.3, ball.y - BALL_R*0.3, 1, ball.x, ball.y, BALL_R * 1.4);
     if (ball.testMode) {
-      grd.addColorStop(0,   '#e0ffff');
-      grd.addColorStop(0.4, '#00d4ff');
-      grd.addColorStop(1,   'rgba(0,100,200,0)');
+      grd.addColorStop(0, '#e0ffff'); grd.addColorStop(0.4, '#00d4ff'); grd.addColorStop(1, 'rgba(0,100,200,0)');
     } else {
-      grd.addColorStop(0,   '#fffde7');
-      grd.addColorStop(0.4, '#ffd700');
-      grd.addColorStop(1,   'rgba(255,100,0,0)');
+      grd.addColorStop(0, '#fffde7'); grd.addColorStop(0.4, '#ffd700'); grd.addColorStop(1, 'rgba(255,100,0,0)');
     }
     ctx.shadowBlur = 22;
     ctx.shadowColor = ball.testMode ? '#00d4ff' : '#ffd700';
@@ -604,10 +773,8 @@ function draw() {
     ctx.fill();
     ctx.shadowBlur = 0;
   }
-
-  // Particles — update first, then draw only live ones
   particles.forEach(p => {
-    p.x  += p.vx; p.y += p.vy;
+    p.x += p.vx; p.y += p.vy;
     p.vy += p.gravity;
     p.vx *= 0.97;
     p.life -= p.decay;
@@ -615,7 +782,7 @@ function draw() {
   particles = particles.filter(p => p.life > 0);
   particles.forEach(p => {
     const [r,g,b] = p.color;
-    const radius = Math.max(0.5, p.size * p.life); // never negative
+    const radius = Math.max(0.5, p.size * p.life);
     if (p.glow) { ctx.shadowBlur = 8; ctx.shadowColor = `rgb(${r},${g},${b})`; }
     ctx.globalAlpha = p.life;
     if (p.shape === 'square') {
@@ -630,15 +797,9 @@ function draw() {
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
   });
-
   ctx.restore();
-
-  // Lane indicator (above board)
   drawLaneIndicator();
-
-  // Update physics
   if (dropping && ball && !ball.landed) { try { updateBall(); } catch(e) { console.error('physics:', e); } }
-
   } catch(e) { console.error('draw:', e); ctx.restore(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; }
 }
 
@@ -646,7 +807,6 @@ function drawPegs() {
   PEGS.forEach((p, i) => {
     const flash = pegFlashes[i];
     if (flash) {
-      // Expanding ring
       flash.ring += 3;
       flash.life -= 0.05;
       if (flash.life <= 0) { delete pegFlashes[i]; }
@@ -659,9 +819,8 @@ function drawPegs() {
       }
     }
     const pulse = flash ? flash.life : 0;
-    const glowR = 200 + Math.round(pulse * 55), glowG = 200 + Math.round(pulse * 55), glowB = 255;
     ctx.shadowBlur = 8 + pulse * 20;
-    ctx.shadowColor = flash ? `rgba(200,255,0,0.9)` : 'rgba(140,160,255,0.5)';
+    ctx.shadowColor = flash ? 'rgba(200,255,0,0.9)' : 'rgba(140,160,255,0.5)';
     const grd = ctx.createRadialGradient(p.x - 1.5, p.y - 1.5, 0.5, p.x, p.y, PEG_R);
     grd.addColorStop(0, flash ? '#ffffff' : '#dde8ff');
     grd.addColorStop(1, flash ? '#c8ff00' : '#8090c0');
@@ -679,12 +838,8 @@ function drawPrizeSlots() {
     const sx = i * SLOT_W, sy = PRIZE_Y_START;
     const sc = SLOT_COLS[i];
     const isJack = prize >= 10000;
-
-    // Slot background
     ctx.fillStyle = sc.bg;
     ctx.fillRect(sx + 1, sy + 1, SLOT_W - 2, sh - 2);
-
-    // Border
     if (isJack) {
       const glowA = 0.5 + 0.5 * Math.sin(time * 0.06);
       ctx.shadowBlur = 20 + glowA * 20;
@@ -697,8 +852,6 @@ function drawPrizeSlots() {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(sx + 1, sy + 1, SLOT_W - 2, sh - 2);
     ctx.shadowBlur = 0;
-
-    // Prize label
     ctx.font = `bold ${prize >= 50 ? '16' : prize >= 25 ? '14' : '15'}px Bebas Neue, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -709,8 +862,7 @@ function drawPrizeSlots() {
     } else {
       ctx.fillStyle = prize === 0 ? '#2a2a4a' : sc.label;
     }
-    const label = `$${prize}`;
-    ctx.fillText(label, sx + SLOT_W / 2, sy + sh / 2);
+    ctx.fillText(`$${prize}`, sx + SLOT_W / 2, sy + sh / 2);
     ctx.shadowBlur = 0;
   });
 }
@@ -719,7 +871,6 @@ function drawLaneIndicator() {
   if (dropping || !selRep) return;
   const x = SLOT_W / 2 + selLane * SLOT_W;
   const y = 16;
-  // Arrow pointing down
   ctx.save();
   ctx.globalAlpha = 0.6 + 0.4 * Math.abs(Math.sin(time * 0.08));
   ctx.fillStyle = '#c8ff00';
@@ -739,26 +890,6 @@ function drawLaneIndicator() {
 /* ════════════════════════════════════════════
    UI
    ════════════════════════════════════════════ */
-function renderRepList() {
-  const el = document.getElementById('rep-list');
-  el.innerHTML = '';
-  reps.forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'rep-item' + (selRep?.id === r.id ? ' active' : '');
-    div.innerHTML = `<span>${r.name}</span><span class="rep-tokens">${r.tokens}</span>`;
-    div.onclick = () => selectRep(r);
-    el.appendChild(div);
-  });
-}
-
-function selectRep(r) {
-  selRep = r;
-  renderRepList();
-  const td = document.getElementById('token-display');
-  td.innerHTML = `<div class="lbl">${r.name}</div><div class="big">${r.tokens}</div><div class="lbl">tokens remaining</div>`;
-  document.getElementById('drop-btn').disabled = r.tokens <= 0 || dropping;
-}
-
 function updateLaneBtns() {
   document.querySelectorAll('.lane-btn').forEach((b, i) => {
     b.classList.toggle('sel', i === selLane);
@@ -781,43 +912,41 @@ function renderHistory() {
   const el = document.getElementById('hist-list');
   el.innerHTML = '';
   drops.slice(0, 20).forEach(d => {
-    const cls = d.prize_amount >= 50 ? 'jackpot' : d.prize_amount >= 25 ? 'high' : d.prize_amount >= 500 ? 'mid' : 'low';
-    const label = `$${d.prize_amount}`;
+    const cls = d.prize_amount >= 50 ? 'jackpot' : d.prize_amount >= 25 ? 'high' : d.prize_amount >= 10 ? 'mid' : 'low';
     const div = document.createElement('div');
     div.className = 'hist-item';
-    div.innerHTML = `<span class="hist-name">${d.rep_name}</span><span class="hist-amount ${cls}">${label}</span>`;
+    div.innerHTML = `<span class="hist-name">${d.rep_name}</span><span class="hist-amount ${cls}">$${d.prize_amount}</span>`;
     el.appendChild(div);
   });
 }
 
 function renderLeaderboard() {
   const el = document.getElementById('lb-list');
-  const sorted = [...reps].sort((a, b) => (b.total_won || 0) - (a.total_won || 0));
+  const playerNames = PLAYERS.map(p => p.name);
+  const filtered = reps.filter(r => playerNames.includes(r.name));
+  const sorted = [...filtered].sort((a, b) => (b.total_won || 0) - (a.total_won || 0));
   el.innerHTML = '';
   sorted.slice(0, 8).forEach((r, i) => {
     const won = r.total_won || 0;
     const div = document.createElement('div');
     div.className = 'lb-item';
-    div.innerHTML = `<span class="lb-rank">${i+1}</span><span class="lb-name">${r.name}</span><span class="lb-won">${won>=1000?`$${won/1000}K`:`$${won}`}</span>`;
+    div.innerHTML = `<span class="lb-rank">${i+1}</span><span class="lb-name">${r.name}</span><span class="lb-won">${won>=1000?`$${(won/1000).toFixed(1)}K`:`$${won}`}</span>`;
     el.appendChild(div);
   });
 }
 
 function showAnnounce(prize, repName) {
-  const box   = document.getElementById('announce-box');
-  const pEl   = document.getElementById('announce-prize');
-  const sEl   = document.getElementById('announce-sub');
-  const isJ   = prize >= 50;
+  const box = document.getElementById('announce-box');
+  const pEl = document.getElementById('announce-prize');
+  const sEl = document.getElementById('announce-sub');
+  const isJ = prize >= 50;
   const label = prize <= 1 ? 'BETTER LUCK\nNEXT TIME' : prize >= 25 ? `$${prize.toLocaleString()}` : `$${prize}`;
   pEl.textContent = label;
   pEl.style.color = isJ ? '#ffd700' : prize >= 25 ? '#c8ff00' : prize >= 10 ? '#00d4ff' : '#aaaacc';
-  if (isJ) pEl.style.textShadow = '0 0 40px rgba(255,215,0,0.8)';
-  else pEl.style.textShadow = '';
+  pEl.style.textShadow = isJ ? '0 0 40px rgba(255,215,0,0.8)' : '';
   sEl.textContent = prize === 0 ? '' : `${repName} wins!`;
   box.classList.add('show');
   announcing = true;
-
-  // Host reveal — slides in on any real win
   if (prize >= 5) {
     const reveal   = document.getElementById('host-reveal');
     const banner   = document.getElementById('host-banner');
@@ -829,6 +958,7 @@ function showAnnounce(prize, repName) {
     requestAnimationFrame(() => reveal.classList.add('show'));
   }
 }
+
 function hideAnnounce() {
   document.getElementById('announce-box').classList.remove('show');
   document.getElementById('host-reveal').classList.remove('show');
@@ -838,84 +968,12 @@ function hideAnnounce() {
 /* ════════════════════════════════════════════
    ACTIONS
    ════════════════════════════════════════════ */
-
-  async function upsertRep() {
-    const name  = document.getElementById('add-rep-name').value.trim();
-    const toks  = parseInt(document.getElementById('add-rep-tokens').value);
-    const msgEl = document.getElementById('add-rep-msg');
-    if (!name) { msgEl.style.color='#ff2d78'; msgEl.textContent='Enter a name.'; return; }
-    if (isNaN(toks) || toks < 0) { msgEl.style.color='#ff2d78'; msgEl.textContent='Enter token count (0+).'; return; }
-
-    msgEl.style.color='var(--dim)'; msgEl.textContent='Saving…';
-
-    try {
-      const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase() && !String(r.id).startsWith('demo-'));
-      if (existing) {
-        await sb.from('rd_reps').update({ tokens: toks }).eq('id', existing.id);
-        msgEl.style.color='var(--lime)'; msgEl.textContent=`${name} updated → ${toks} tokens`;
-      } else {
-        await sb.from('rd_reps').insert({ name, tokens: toks, total_won: 0 });
-        msgEl.style.color='var(--lime)'; msgEl.textContent=`${name} added with ${toks} tokens`;
-      }
-      document.getElementById('add-rep-name').value  = '';
-      document.getElementById('add-rep-tokens').value = '';
-      await loadData();
-    } catch(e) {
-      msgEl.style.color='#ff2d78';
-      msgEl.textContent='Save failed — check DB setup.';
-    }
-    setTimeout(() => { msgEl.textContent=''; }, 3000);
-  }
-
-  async function adminSetTokens() { /* legacy — upsertRep() replaces this */ }
-
-  async function triggerDrop(testMode = false) {
+function triggerDrop(testMode = false) {
   if (dropping) return;
   if (!testMode && (!selRep || selRep.tokens <= 0)) return;
   document.getElementById('drop-btn').disabled = true;
   document.getElementById('test-drop-btn').disabled = true;
   startDrop(selLane, testMode);
-}
-
-async function adminSetTokens() {
-  const name = document.getElementById('admin-rep-input').value.trim();
-  const toks = parseInt(document.getElementById('admin-tok-input').value);
-  if (!name || isNaN(toks)) return;
-  const existing = reps.find(r => r.name.toLowerCase() === name.toLowerCase());
-  if (existing) {
-    await sb.from('rd_reps').update({ tokens: toks }).eq('id', existing.id);
-  } else {
-    await sb.from('rd_reps').insert({ name, tokens: toks });
-  }
-  await loadData();
-  document.getElementById('admin-rep-input').value = '';
-  document.getElementById('admin-tok-input').value = '';
-}
-
-/* ════════════════════════════════════════════
-   DATA LOADING
-   ════════════════════════════════════════════ */
-async function loadData() {
-  try {
-    const [repsRes, dropsRes] = await Promise.all([
-      sb.from('rd_reps').select('*').order('name'),
-      sb.from('rd_drops').select('*').order('created_at', {ascending:false}).limit(30),
-    ]);
-    if (repsRes.data  && repsRes.data.length  > 0) reps  = repsRes.data;
-    if (dropsRes.data && dropsRes.data.length > 0) drops = dropsRes.data;
-
-    // Update selRep reference
-    if (selRep) selRep = reps.find(r => r.id === selRep.id) || null;
-
-    renderRepList();
-    renderHistory();
-    renderLeaderboard();
-    if (selRep) selectRep(selRep);
-  } catch(e) {
-    console.warn('DB error:', e);
-    // reps already pre-loaded with demo data — just re-render
-    renderRepList();
-  }
 }
 
 /* ════════════════════════════════════════════
@@ -927,23 +985,9 @@ function showSetup() {
 }
 
 /* ════════════════════════════════════════════
-   PASSWORD GATE
+   INIT
    ════════════════════════════════════════════ */
-function checkGate() {
-  const val = document.getElementById('gate-input').value.trim();
-  if (val === ADMIN_PASS) { isAdmin = true; launch(); }
-  else if (val === PASS)  { isAdmin = false; launch(); }
-  else { document.getElementById('gate-err').textContent = 'Wrong password'; }
-}
-
-function launch() {
-  document.getElementById('app').classList.add('visible');
-  buildLaneBtns();
-  loadData();
-  draw();
-}
-
-launch();
+renderGate();
 </script>
 </body>
 </html>
