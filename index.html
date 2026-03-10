@@ -531,11 +531,19 @@ async function setTokens(name) {
   const msgEl = document.getElementById('admin-token-msg');
   if (isNaN(val) || val < 0) return;
   try {
-    await sb.from('rd_reps').update({ tokens: val }).eq('name', name);
+    const { error } = await sb.from('rd_reps').update({ tokens: val }).eq('name', name);
+    if (error) throw error;
+    // Update local data immediately so UI reflects the change
+    const rep = reps.find(r => r.name === name);
+    if (rep) rep.tokens = val;
+    if (selRep && selRep.name === name) selRep.tokens = val;
+    updateMyTokens();
+    renderRepList();
     msgEl.textContent = `${name} → ${val} tokens`;
-    await loadData();
+    msgEl.style.color = 'var(--lime)';
     renderAdminTokenList();
   } catch(e) {
+    console.error('Token update failed:', e);
     msgEl.textContent = 'Failed — check DB';
     msgEl.style.color = 'var(--magenta)';
   }
